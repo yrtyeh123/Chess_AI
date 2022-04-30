@@ -94,7 +94,7 @@ class GameState():
             self.castleRightsLog.pop()  # get rid of the new castle rights from the move we are undoing
             self.currentCastlingRight = self.castleRightsLog[
                 -1]  # set the current castle rights to the last one in the list
-            # undo castl move
+            # undo castle move
             if move.isCastleMove:
                 if move.endCol - move.startCol == 2:  # kingside
                     self.board[move.endRow][move.endCol + 1] = self.board[move.endRow][move.endCol - 1]
@@ -102,6 +102,8 @@ class GameState():
                 else:  # queenside
                     self.board[move.endRow][move.endCol - 2] = self.board[move.endRow][move.endCol + 1]
                     self.board[move.endRow][move.endCol + 1] = '--'
+            self.checkMate = False
+            self.staleMate = False
 
     '''
     Update the castle rights given the move
