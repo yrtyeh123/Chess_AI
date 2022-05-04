@@ -1,22 +1,20 @@
 import pygame as p
-from Tools.demo.sortvisu import WIDTH
 
 import ChessEngine
 import SmartMoveFinder
 from multiprocessing import Process, Queue
 
-BOARD_WIDTH = BOARD_HEIGHT = 512
-MOVE_LOG_PANEL_WIDTH = 250
-MOVE_LOG_PANEL_HEIGHT = BOARD_HEIGHT
-DIMENSION = 8
-Square_SIZE = BOARD_HEIGHT // DIMENSION
-MAX_FPS = 15  # for animations later on
+BOARD_WIDTH = BOARD_HEIGHT = 512 # kích thước của bàn cờ 8 x 8
+MOVE_LOG_PANEL_WIDTH = 250 # chiều rộng của phần hiển thị nước cờ
+MOVE_LOG_PANEL_HEIGHT = BOARD_HEIGHT # chiều dài của phần hiển thị nước cờ
+DIMENSION = 8 # kích thước bàn cờ gồm 8 ô
+Square_SIZE = BOARD_HEIGHT // DIMENSION # kích thước của mỗi ô vuông tiêu chuẩn
+MAX_FPS = 15  # for animations
 IMAGES = {}
 
 '''
-Initialize a global dictionary of images. This will be called exactly once in the main
+Tải lên hình ảnh ban đầu của bàn cờ 
 '''
-
 
 def loadImages():
     pieces = ['wp', 'bp', 'wR', 'bR', 'wN', 'bN', 'wB', 'bB', 'wQ', 'bQ', 'wK', 'bK']
@@ -28,9 +26,10 @@ def main():
     global returnQueue
     p.init()
     screen = p.display.set_mode((BOARD_WIDTH + MOVE_LOG_PANEL_WIDTH, BOARD_HEIGHT))
+    p.display.set_caption("Game cờ vua của nhóm 7")
     clock = p.time.Clock()
-    screen.fill(p.Color("pink"))
-    moveLogFont = p.font.SysFont("Times New Roman", 12, False, False)
+    #screen.fill(p.Color("pink"))
+    moveLogFont = p.font.SysFont("Times New Roman", 12, False, False) # thông số của các nước đi
     gs = ChessEngine.GameState()
     validMoves = gs.getValidMoves()
     moveMade = False  # flag variable for when a move is made
@@ -77,7 +76,7 @@ def main():
                             playerClicks = [squareSelected]
             # key handlers
             elif e.type == p.KEYDOWN:
-                if e.key == p.K_z:  # undo when 'z' is pressed
+                if e.key == p.K_z:  # Bấm Z để đi lại nước đi của mình, nếu đấu vs AI thì bấm z 2 lần
                     gs.undoMove()
                     moveMade = True
                     animate = False
@@ -86,7 +85,7 @@ def main():
                         moveFinderProcess.terminate()
                         AIThingking = False
                     moveUndone = True
-                if e.key == p.K_r:  # reset the board when 'r' is pressed
+                if e.key == p.K_r:  # Sau khi kết thúc, ta có thể bấm "r" để bắt đầu một game đấu mới
                     gs = ChessEngine.GameState()
                     validMoves = gs.getValidMoves()
                     squareSelected = ()
@@ -131,6 +130,8 @@ def main():
         if gs.checkMate or gs.staleMate:
             gameOver = True
             drawEndGameText(screen, 'Stalemate' if gs.staleMate else 'Black win' if gs.whiteToMove else "White win")
+            drawStartGameText(screen, " Bấm r để bắt đầu game mới")
+
             '''
             if gs.staleMate:
                 text = 'Stalemate'
@@ -139,11 +140,12 @@ def main():
                     text = 'Black win'
                 else:
                     text = 'White win'
-            drawEndGameText(screen, text)            
+            drawEndGameText(screen, text + "\n" + "bấm r để bắt đầu game mới")            
             '''
 
+
         clock.tick(MAX_FPS)
-        p.display.flip()
+        p.display.flip() # cập nhật nội dung của toàn bộ màn hình ( bao gồm cả phần chơi và phần hiển thị nước cờ).
 
 
 '''
@@ -213,7 +215,7 @@ Draw the move log
 
 def drawMoveLog(screen, gs, font):
     moveLogRect = p.Rect(BOARD_WIDTH, 0, MOVE_LOG_PANEL_WIDTH, MOVE_LOG_PANEL_HEIGHT)
-    p.draw.rect(screen, p.Color("pink"), moveLogRect)
+    p.draw.rect(screen, p.Color("pink"), moveLogRect) # hiển thị phông nền của phần ghi lại nước cờ
     moveLog = gs.moveLog
     moveTexts = []
     for i in range(0, len(moveLog), 2):
@@ -248,9 +250,9 @@ Animation of moves
 
 def animateMove(move, screen, board, clock):
     global colors
-    dRow = move.endRow - move.startRow
-    dCol = move.endCol - move.startCol
-    framesPerSquare = 10  # frames to move one square
+    dRow = move.endRow - move.startRow # Hiệu tung độ
+    dCol = move.endCol - move.startCol # Hiệu hoành độ
+    framesPerSquare = 10  # số khung hình được hiển thị trên 1 đơn vị thời gian
     frameCount = (abs(dRow) + abs(dCol)) * framesPerSquare
     for frame in range(frameCount + 1):
         row, col = (move.startRow + dRow * frame / frameCount, move.startCol + dCol * frame / frameCount)
@@ -269,15 +271,28 @@ def animateMove(move, screen, board, clock):
         # draw moving piece
         if move.pieceMoved != '--':
             screen.blit(IMAGES[move.pieceMoved], p.Rect(col * Square_SIZE, row * Square_SIZE, Square_SIZE, Square_SIZE))
-        p.display.flip()
-        clock.tick(60)
+        p.display.flip() # cập nhật toàn bộ màn hình
+        clock.tick(60) #
 
-
+'''
+Sau khi game đấu kết thúc ( Đen thắng || Trắng thắng || Hoà ) in ra thông điệp của text
+'''
 def drawEndGameText(screen, text):
     font = p.font.SysFont("Times New Roman", 32, True, False)
     textObject = font.render(text, 0, p.Color('Gray'))
     textLocation = p.Rect(0, 0, BOARD_WIDTH + MOVE_LOG_PANEL_WIDTH, BOARD_HEIGHT).move(
         BOARD_WIDTH / 2 - textObject.get_width() / 2, BOARD_HEIGHT / 2 - textObject.get_height() / 2)
+    screen.blit(textObject, textLocation)
+    textObject = font.render(text, 0, p.Color('Black'))
+    screen.blit(textObject, textLocation.move(2, 2))
+'''
+Sau khi game đấu kết thúc, in ra chỉ dẫn để bắt đầu một game đấu khác
+'''
+def drawStartGameText(screen, text):
+    font = p.font.SysFont("Times New Roman", 32, True, False)
+    textObject = font.render(text, 0, p.Color('Gray'))
+    textLocation = p.Rect(0, 0, BOARD_WIDTH + MOVE_LOG_PANEL_WIDTH, BOARD_HEIGHT).move(
+        BOARD_WIDTH / 2 - textObject.get_width() / 2, BOARD_HEIGHT / 2 + textObject.get_height() * 2)
     screen.blit(textObject, textLocation)
     textObject = font.render(text, 0, p.Color('Black'))
     screen.blit(textObject, textLocation.move(2, 2))

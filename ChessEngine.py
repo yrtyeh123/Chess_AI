@@ -186,12 +186,12 @@ class GameState():
                         else:  # 2nd allied piece, so no pin or check possible in this direction
                             break
                     elif endPiece[0] == enemyColor:
-                        type = endPiece[1]
-                        if (0 <= j <= 3 and type == 'R') or \
-                                (4 <= j <= 7 and type == "B") or \
-                                (i == 1 and type == 'p' and (
+                        typeChess = endPiece[1]
+                        if (0 <= j <= 3 and typeChess == 'R') or \
+                                (4 <= j <= 7 and typeChess == "B") or \
+                                (i == 1 and typeChess == 'p' and (
                                         (enemyColor == 'w' and 6 <= j <= 7) or (enemyColor == 'b' and 4 <= j <= 5))) or \
-                                (type == "Q") or (i == 1 and type == "K"):
+                                (typeChess == "Q") or (i == 1 and typeChess == "K"):
                             if possiblePin == (): #no piece blocking, so check
                                 inCheck = True
                                 checks.append((endRow, endCol, d[0], d[1]))
@@ -213,7 +213,6 @@ class GameState():
                 if endPiece[0] == enemyColor and endPiece[1] == 'N':  # enemy knight attack king
                     inCheck = True
                     checks.append((endRow, endCol, m[0], m[1]))
-        # check for bishop checks
         return inCheck, pins, checks
 
     '''
@@ -275,24 +274,15 @@ class GameState():
             self.staleMate = False
         return moves
 
-    '''
-    Determine if the current player is in check
-    '''
-    '''
-        def inCheck(self):
-        if self.whiteToMove:
-            return self.squareUnderAttack(self.whiteKingLocation[0], self.whiteKingLocation[1])
-        else:
-            return self.squareUnderAttack(self.blackKingLocation[0], self.blackKingLocation[1])
-    '''
+
     '''
     Determine if the enemy player can attack the square
     '''
 
-    def squareUnderAttack(self, row, col, allyColor):
+    def squareUnderAttack(self, row, col, allyColor): # chưa hiểu sáng mai tìm hiểu kỹ
         # check outward from square
         enemyColor = 'w' if allyColor == 'b' else 'b'
-        # directions = ((-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1))
+        #directions = ((-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1))
         directions = ((-1, 0), (0, -1), (1, 0), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1))
         for j in range(len(directions)):
             d = directions[j]
@@ -304,18 +294,18 @@ class GameState():
                     if endPiece[0] == allyColor:  # no attack from that direction
                         break
                     elif endPiece[0] == enemyColor:
-                        type = endPiece[1]
+                        typeChess = endPiece[1]
                         # 5 possibilities here in this complex conditional
                         # 1. orthogonally away from square and piece is a rook
                         # 2. diagonally away from square and piece is a bishop
                         # 3. 1 square away diagonally from square and piece is a pawn
                         # 4. any direction and piece is a queen
                         # 5. any direction 1 square away and piece is a king
-                        if (0 <= j <= 3 and type == 'R') or \
-                                (4 <= j <= 7 and type == "B") or \
-                                (i == 1 and type == 'p' and (
+                        if (0 <= j <= 3 and typeChess == 'R') or \
+                                (4 <= j <= 7 and typeChess == "B") or \
+                                (i == 1 and typeChess == 'p' and (
                                         (enemyColor == 'w' and 6 <= j <= 7) or (enemyColor == 'b' and 4 <= j <= 5))) or \
-                                (type == "Q") or (i == 1 and type == "K"):
+                                (typeChess == "Q") or (i == 1 and type == "K"):
                             return True
                         else:  # enemy piece not applying check:
                             break
@@ -578,9 +568,9 @@ class GameState():
 
     def getKingsideCastleMoves(self, row, col, moves, allyColor):
         # check if two square between king and rook are clear and not under attack
-        if self.board[row][col + 1] == '--' and self.board[row][col + 2] == '--' and \
-                not self.squareUnderAttack(row, col + 1, allyColor) and not self.squareUnderAttack(row, col + 2,
-                                                                                                   allyColor):
+        if self.board[row][col + 1] == '--' and self.board[row][col + 2] == '--' \
+                and not self.squareUnderAttack(row, col + 1, allyColor) \
+                and not self.squareUnderAttack(row, col + 2, allyColor):
             moves.append(Move((row, col), (row, col + 2), self.board, castle=True))
 
     '''
